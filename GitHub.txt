@@ -1,0 +1,21 @@
+import hudson.model.*
+
+// Set the GitHub URL you want to search for
+def githubUrl = "https://github.com/"
+
+// Loop through all jobs in the Jenkins instance
+for (item in Jenkins.instance.items) {
+    // Check if the job is a buildable item (e.g. a Freestyle or Pipeline job)
+    if (item instanceof BuildableItem) {
+        // Get the buildable item's configuration as a Map
+        def config = item.getConfigFile().asXml().toObject()
+
+        // Check if the Map contains a Git SCM configuration with the GitHub URL
+        if (config.scm?.userRemoteConfigs?.url?.contains(githubUrl)) {
+            // Print the job name and GitHub URL
+            println("Job: ${item.name}")
+            println("GitHub URL: ${config.scm.userRemoteConfigs.url}")
+            println()
+        }
+    }
+}
