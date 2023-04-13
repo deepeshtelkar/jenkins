@@ -1,0 +1,31 @@
+import hudson.model.*
+import groovy.xml.*
+
+// Set the old and new GitHub URLs
+def oldGithubUrl = "https://github.com/old-user/old-repo"
+def newGithubUrl = "https://github.com/new-user/new-repo"
+
+// Loop through all jobs in the Jenkins instance
+for (item in Jenkins.instance.items) {
+    // Check if the job is a buildable item (e.g. a Freestyle or Pipeline job)
+    if (item instanceof BuildableItem) {
+        // Get the buildable item's configuration as a Map
+        def configXml = item.getConfigFile().asString()
+        def config = new XmlParser().parseText(configXml)
+
+        // Check if the Map contains a Git SCM configuration with the old GitHub URL
+        if (config.scm?.userRemoteConfigs?.url?.contains(oldGithubUrl)) {
+            // Replace the old GitHub URL with the new GitHub URL
+            config.scm.userRemoteConfigs.url = config.scm.userRemoteConfigs.url.replace(oldGithubUrl, newGithubUrl)
+
+            // Save the updated configuration to the job's configuration file
+            def writer = new StringWriter()
+            new XmlNodePrinter(new PrintWriter(writer)).print(config)
+            item.setConfigFile(new StreamSource(new StringReader(writer.toString())))
+            item.save()
+
+            // Print a message to the console
+            println("Replaced old GitHub URL '${oldGithubUrl}' with new GitHub URL '${newGithubUrl}' in job '${item.name}'")
+        }
+    }
+}
